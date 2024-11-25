@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width">
+<title>HexView @ nate.barkei.com</title>
+<link rel="icon" href="favicon.ico" type="image/ico" sizes="16x16 32x32">
+<script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js'></script>
+
+<style>
+    @font-face {
+      font-family: 'VGAsquarePx';
+      src: url(webfonts/vga_squarepx.eot);
+      src: url(webfonts/vga_squarepx.eot?#iefix) format('embedded-opentype'),
+           url(webfonts/vga_squarepx.woff2) format('woff2'),
+           url(webfonts/vga_squarepx.woff) format('woff'),
+           url(webfonts/vga_squarepx.ttf) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
+    * {font-family:VGAsquarePx, monospace;
+        font-size:24px;
+        line-height:24px;
+        font-smooth: never;
+     -webkit-font-smoothing : none;
+        font-feature-settings: "lnum","tnum";
+    }
+
+     body    {margin:0; background-color: #55F; 
+        color: #FFF; font-size: 24px;}
+
+     .noselect {-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+
+    .fg0 {color: #000} .fg1 {color: #00a} .fg2 {color: #0a0}
+    .fg3 {color: #0aa} .fg4 {color: #a00} .fg5 {color: #a0a}
+    .fg6 {color: #a50} .fg7 {color: #aaa} .fg8 {color: #555}
+    .fg9 {color: #55f} .fg10 {color: #5f5} .fg11 {color: #5ff}
+    .fg12 {color: #f55} .fg13 {color: #f5f} .fg14 {color: #FF5}
+    .fg15 {color: #FFF}
+
+    .bg0 {background-color: #000} .bg1 {background-color: #00a} .bg2 {background-color: #0a0}
+    .bg3 {background-color: #0aa} .bg4 {background-color: #a00} .bg5 {background-color: #a0a}
+    .bg6 {background-color: #a50} .bg7 {background-color: #aaa} .bg8 {background-color: #555}
+    .bg9 {background-color: #55f} .bg10 {background-color: #5f5} .bg11 {background-color: #5ff}
+    .bg12 {background-color: #f55} .bg13 {background-color: #f5f} .bg14 {background-color: #FF5}
+    .bg15 {background-color: #FFF}
+
+    ::-webkit-scrollbar-button:start:decrement,
+    ::-webkit-scrollbar-button:end:increment {display: block; height: 24px; border-radius: 0px; background-color: #FFF; padding:0; margin:0;}
+    ::-webkit-scrollbar-button:vertical:decrement{ 
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAYCAYAAAD3Va0xAAAAU0lEQVR42u3SQQ4AEAxE0f77H5oNGylKSyzMAV7SziAiSQJCgXA66SpUT8cDtf9jB+qVwAo0axILZJ0DI2h1U2jQ7jA5BmkJqf9DH3oOsiYecicDs9VAAewly8IAAAAASUVORK5CYII=');
+        background-repeat: no-repeat;}
+    ::-webkit-scrollbar-button:vertical:increment {
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAYCAYAAAD3Va0xAAAAVklEQVR42u3USQoAIAgF0P/vf2jbRDQXWlGQa33gUAQgWBD0EI2OHIPytvmhDz0HaR8vt0FQYKGuNqNZLKlpDXuEFfm9rckkMoRqmPqOYqybc++fbQ4Hs9VAAQXONBoAAAAASUVORK5CYII=');
+        background-repeat: no-repeat;}
+    ::-webkit-scrollbar-thumb{ background-color: #FFF; border-left:2px solid #000; border-right:2px solid #000;} 
+    ::-webkit-scrollbar-track{ background-color: #aaa;  border-left:2px solid #000; border-right:2px solid #000;} 
+    ::-webkit-scrollbar{ width: 18px; }
+
+    #Menu {
+        position:fixed;
+        top: 0;
+        width: 100%;
+        overflow: hidden;
+        height: 24px;
+        z-index: 100;
+    }
+
+    .title {
+        border-right: .2ch solid #000;
+        margin-right: .3ch;
+        padding-right: .2ch;
+    }
+
+    #Footer {
+        position:fixed;
+        bottom: 0;
+        height: 48px;
+        width: 100%;
+        background-color: #aaa;
+        color: #FFF;
+    }
+    #viewer {
+        max-width: 100vw;
+    }
+    #container {
+        width: max-content;
+        margin: 0 0;
+        padding-top: 24px;
+        cursor: default;
+
+    }
+    pre {margin: 0}
+    #file {margin:0; padding:0; border:0;}
+    input[type=file]::file-selector-button {
+    border: 0;
+    padding: 0 1ch;
+    color: #FFF;
+    background-color: #000;
+    transition: .2s;
+}       
+
+input[type=file]::file-selector-button:hover {
+  background-color: #aaa;
+  border: 0;
+}
+    #header {
+        position: sticky;
+        top: 24px;
+        z-index:1;
+        background-color: #55f;
+        color: #000;
+    }
+    #header,#content > div{
+        
+        display: grid;
+        contain: content;
+        grid-template-columns: min-content min-content min-content;
+    }
+    .offset { padding: 0 1ch}
+    .ascii {
+        padding: 0;
+        margin-left: 2ch;
+    }
+
+    #content {
+        position: relative;
+    }
+    #content > div {
+        position: absolute;
+        left: 0;
+        right: 0;
+    }
+
+    .offset {
+        color: #aaa;
+    }
+    .highlighted {
+        position: absolute;
+        z-index: 1;
+        border-radius: 5px;
+        background: #000;
+        color:#FFF;
+        text-align: center;
+        pointer-events: none;
+    }
+</style>
+</head>
+<body>
+    <div id="Menu" class="fg0 bg15 noselect"><span class='title'>Nate's Hex Viewer</span><input id="file" type="file" size="80%"></div>
+    <div id="viewer">
+    <div id="container">
+        <div id="header" class="noselect">
+            <pre class="offset f0">Offset   </pre>
+            <pre class="hex">00 01 02 03-04 05 06 07-08 09 0a 0b-0c 0d 0e 0f</pre>
+            <pre class="ascii">Ascii Characters               </pre>
+        </div>
+        <div id="content"></div>
+    </div>
+    </div>
+    <div id="Footer" class="noselect">Footer</div>
+<script>
+const content = document.getElementById('content');
+const file = document.getElementById('file');
+const AWIDTH = 31;
+const HWIDTH = 47;
+
+let updatePending = false;
+let bytes;
+let lines;
+let firstLine;
+let lastLine;
+let hHighlight;
+let aHighlight;
+
+
+// Event handler
+file.addEventListener('change', showFile);
+window.addEventListener('resize',pendingUpdate);
+document.addEventListener('scroll', pendingUpdate);
+document.addEventListener('mousemove', updateHighlight);
+
+
+function showFile(e) {
+    e.target.files[0].arrayBuffer().then(buffer =>{
+        bytes = new Uint8Array(buffer);
+        lines = Math.ceil(bytes.length / 16); // 
+        firstLine = 0;
+        lastLine = -1; 
+        console.log('Added file lines:',lines)
+        content.textContent = '';
+        content.style.height = (lines * 24) + 'px';
+
+        hHighlight = createPre('highlighted');
+        aHighlight = createPre('highlighted');
+        hHighlight.hidden = true;
+        aHighlight.hidden = true;
+        content.appendChild(hHighlight);
+        content.appendChild(aHighlight);
+        updateLines();
+    });
+}
+
+function pendingUpdate() {
+    if (!updatePending) {
+        updatePending = true;
+        window.requestAnimationFrame(updateLines);
+    }
+}
+
+function updateLines() {
+    updatePending = false;
+    if (!bytes) return;
+
+    let bounds = content.getBoundingClientRect();
+    let top = -bounds.top - window.innerHeight;
+    let bottom = -bounds.top +(2 * window.innerHeight);
+    let height = bounds.height / lines;
+
+    renderLines(
+        Math.max(0, Math.min(lines-1, Math.floor(top / height))),
+        Math.max(0, Math.min(lines-1, Math.floor(bottom / height)))
+    )
+}
+
+function renderLines(first,last) {
+    for (let i = firstLine; i <= lastLine; i ++) {
+    if (i < first || i > last) {
+      document.getElementById('line' + i).remove()
+    }
+  }
+
+  for (let i = first; i <= last; i ++) {
+    if (i < firstLine || i > lastLine) {
+      renderLine(i)
+    }
+  }
+
+  firstLine = first
+  lastLine  = last
+
+}
+
+function renderLine(index) {
+let line       = document.createElement('div')
+  line.id        = 'line' + index
+  line.style.top = (index * 24) + 'px'
+
+  let offset = createPre('offset')
+  let hex    = createPre('hex')
+  let chr    = createPre('ascii')
+
+  let hexContent = ''
+  let chrContent = ''
+
+  let limit = Math.min((index + 1) * 16, bytes.length)
+  for (let i = index * 16; i < limit; i ++) {
+    let byte = bytes[i]
+    hexContent += ' ' + byte.toString(16).padStart(2, '0')
+    chrContent += ' '+ getAscii(byte)
+  }
+
+  offset.textContent = (index * 16).toString(16).padStart(8, '0')+':'
+  hex.textContent    = hexContent.substring(1).padEnd(47, ' ')
+  chr.textContent    = chrContent.substring(1).padEnd(31, ' ')
+
+  line.append(offset, hex, chr)
+  content.append(line)
+
+}
+
+function getAscii(byte) {return (byte > 31 && byte < 127 ? String.fromCharCode(byte) : '․')}
+function createPre(className) {let pre = document.createElement('pre'); pre.className = className; return pre;}
+
+function updateHighlight(e) {
+    if (!bytes) return;
+
+    hHighlight.hidden = true;
+    aHighlight.hidden = true;
+    
+    let type = e.target.className;
+
+    if ((type !== 'hex' && type !== 'ascii') 
+        || e.target.parentNode.id.substring(0,4) !== 'line') return;
+
+        let byteCharacters = (type === 'hex' ? 3 : 2)
+  let characterWidth = (
+    e.target.getBoundingClientRect().width
+    / (type === 'hex' ? HWIDTH : AWIDTH)
+  )
+
+  let line   = parseInt(e.target.parentNode.id.substring(4))
+  let offset = Math.floor((e.offsetX / characterWidth + 0.5) / byteCharacters)
+  let index  = 16 * line + offset
+
+  if (index >= bytes.length){
+    return
+  }
+
+  let top = Math.round(line * (content.getBoundingClientRect().height / lines))
+  hHighlight.style.top = top + 'px'
+  aHighlight.style.top = top + 'px'
+
+  hHighlight.style.left = Math.round(
+    e.target.parentNode.children[1].offsetLeft
+    + ((offset * 3 - 0.5) * characterWidth)
+  ) + 'px'
+
+  aHighlight.style.left = Math.round(
+    e.target.parentNode.children[2].offsetLeft
+    + ((offset * 2 - 0.5) * characterWidth)
+  ) + 'px'
+
+  hHighlight.style.width = Math.round(3 * characterWidth) + 'px'
+  aHighlight.style.width = Math.round(2 * characterWidth) + 'px'
+
+  let byte                 = bytes[index]
+  hHighlight.textContent = byte.toString(16).padStart(2, '0')
+  aHighlight.textContent = getAscii(byte)
+
+  hHighlight.hidden = false
+  aHighlight.hidden = false
+
+}
+</script>
+</body>
+</html>
